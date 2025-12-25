@@ -8,16 +8,16 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true,
         unique:true,
-        trime:true,
+        trim:true,
         index:true,
-        
+         lowercase:true,
     },
     email:{
         type:String,
         required:true,
         unique:true,
         lowercase:true,
-        lowercase:true,
+       
 
     },
     fullName:{
@@ -52,12 +52,12 @@ const userSchema = new mongoose.Schema({
 
 // hashing a password
 
-userSchema.pre("save",async function(next){
+userSchema.pre("save", async function(req,res,next){
 try {
-        if (!this.isModified("password")) return next()
+        if (!this.isModified("password")) return 
     let hashPassword = await bcrypt.hash(this.password, 10)
 this.password = hashPassword
-next()
+
 } catch (error) {
     console.log("error in hash password.==>",error.message)
     next(error)
@@ -67,7 +67,7 @@ next()
 
 // method for compare password
 
-userSchema.methodS.isPasswordCorrect = async function (password) {
+userSchema.methods.isPasswordCorrect = async function (password) {
     
     return await bcrypt.compare(password,this.password)
     
