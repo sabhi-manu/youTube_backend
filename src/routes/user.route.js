@@ -1,6 +1,7 @@
 import express from "express"
-import { userRegisterController } from "../controllers/user.controller.js"
+import { userLoginController, userLogoutController, userRegisterController } from "../controllers/user.controller.js"
 import upload from "../middlewares/multer.middleware.js"
+import { authMiddlewareJWT } from "../middlewares/auth.middleware.js"
 
 
 const route = express.Router()
@@ -16,7 +17,8 @@ route.post("/register", upload.fields([
     }
 ]) ,userRegisterController)
 
-
+route.post("/login",userLoginController)
+route.post('/logout',authMiddlewareJWT,userLogoutController)
 
 
 

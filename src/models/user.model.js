@@ -75,6 +75,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 
 // TOKEN GENERATE
 userSchema.methods.generateAccessToken = function (){
+    console.log('access token is create ==>')
     return jwt.sign(
         {
             _id:this._id,
@@ -82,17 +83,18 @@ userSchema.methods.generateAccessToken = function (){
             fullName:this.fullName
         },
         process.env.ACCESS_TOKEN_SECRET,
-        {expiresIn:ACCESS_TOKEN_EXPIRY}
+        {expiresIn:process.env.ACCESS_TOKEN_EXPIRY}
     )
 }
 userSchema.methods.generateRefreshToken = function (){
+    console.log('refresh token call for createing==>')
      return jwt.sign(
         {
             _id:this._id,
             
         },
         process.env.REFRESH_TOKEN_SECRET,
-        {expiresIn:REFRESH_TOKEN_EXPIRY}
+        {expiresIn:process.env.REFRESH_TOKEN_EXPIRY}
     )
 }
 
