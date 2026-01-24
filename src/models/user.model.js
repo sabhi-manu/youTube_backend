@@ -57,7 +57,7 @@ try {
         if (!this.isModified("password")) return 
     let hashPassword = await bcrypt.hash(this.password, 10)
 this.password = hashPassword
-
+next()
 } catch (error) {
     console.log("error in hash password.==>",error.message)
     next(error)

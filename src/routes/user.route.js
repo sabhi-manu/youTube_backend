@@ -1,5 +1,5 @@
 import express from "express"
-import { userLoginController, userLogoutController, userRegisterController } from "../controllers/user.controller.js"
+import { getCurrentUser, refreshTOkenController, userLoginController, userLogoutController, userRegisterController } from "../controllers/user.controller.js"
 import upload from "../middlewares/multer.middleware.js"
 import { authMiddlewareJWT } from "../middlewares/auth.middleware.js"
 
@@ -20,7 +20,7 @@ route.post("/register", upload.fields([
 route.post("/login",userLoginController)
 route.post('/logout',authMiddlewareJWT,userLogoutController)
 
-
-
+route.post("/refresh_token",refreshTOkenController)
+route.get("/curret-user",authMiddlewareJWT,getCurrentUser)
 
 export default route

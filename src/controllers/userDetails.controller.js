@@ -1,0 +1,111 @@
+import User from "../models/user.model";
+import { AppEroor } from "../utils/Apperror";
+import uploadOnCloudinary from "../utils/cloudinary";
+
+
+export const changeCurrentPassword = async (req,res)=>{
+try {
+    const userId = req.user._id
+    const {oldPassword,newPassword} = req.body
+
+    if(!oldPassword || !newPassword) {
+        throw new AppEroor(" invalid  details",400)
+    }
+
+    const user = await User.findById(userId)
+
+    if(!user){
+        throw new AppEroor("invalid user.",404)
+    }
+
+    const passwordCheck = await user.isPasswordCorrect(oldPassword)
+    if(!passwordCheck){
+        throw new AppEroor("enter valid password.",400)
+    }
+    user.password = newPassword
+    await user.save({validateBeforeSave:false})
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+} catch (error) {
+    console.log("error in change password. ==>",error.message)
+}
+}
+
+export  const updateAccoutDetails = async (req,res)=>{
+    try {
+        const {email,fullName} = req.body
+        if(!email || !fullName){
+            throw new AppEroor ("details not provide",400)
+        }
+        const user = await User.findByIdAndUpdate(req.user?._id,{$set:{
+            fullName,
+            email
+        } }, {new:true}).select("-password")
+
+        res.status(200).json({
+            success:true,
+            message:"user update successfully.",
+            user
+        })
+    } catch (error) {
+        console.log("error in update user details.==>",error)
+    }
+} 
+
+export const updateUserAvatar = async (req,res)=>{
+    try {
+        const userId = req.user
+        const avatarImagePath = req.file?.avatar
+        if(!avatarImagePath){
+            throw new AppEroor("provide correct image.",400)
+        }
+
+        const uploadAvatar = await uploadOnCloudinary(avatarImagePath,"youTube/profile")
+        if(!uploadAvatar){
+            throw new AppEroor("avatar is missing ",400)
+        }
+
+        const user = await User.findByIdAndUpdate(userId,{
+            $set: {avatar:uploadAvatar?.url}
+        },{new:true}).select("-password")
+
+ res.status(200).json({
+            success:true,
+            message:"user update successfully.",
+            user
+        })
+    } catch (error) {
+        console.log("error in update Avatar.==>",error)
+    }
+}
+
+
+export const updateUserCoverImage = async (req,res)=>{
+    try {
+        const userId = req.user
+        const coverImagePath = req.file?.coverImage
+        if(!coverImagePath){
+            throw new AppEroor("provide correct image.",400)
+        }
+
+        const uploadCoverImage = await uploadOnCloudinary(coverImagePath,"youTube/profile")
+        if(!uploadCoverImage){
+            throw new AppEroor("coverImage is missing ",400)
+        }
+
+        const user = await User.findByIdAndUpdate(userId,{
+            $set: {coverImage:uploadCoverImage?.url}
+        },{new:true}).select("-password")
+        
+ res.status(200).json({
+            success:true,
+            message:"user update successfully.",
+            user
+        })
+    } catch (error) {
+        console.log("error in update Avatar.==>",error)
+    }
+}

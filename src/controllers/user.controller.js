@@ -84,7 +84,7 @@ export const userLoginController = asyncHandler(async(req,res)=>{
     }
     
     const {accessToken,refreshToken} = await generateTokens(user?._id)
-    const loggedInUser = await User.findById(user._id).select("--password -refreshToken")
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
     const option = {
         httpOnly:true,
@@ -130,4 +130,31 @@ export const userLogoutController = asyncHandler(async(req,res)=>{
 
 export const refreshTOkenController = asyncHandler(async(req,res)=>{
     const incomingRefresToken = req.cookies.refreshToken 
+    if(!incomingRefresToken){
+       throw new AppEroor("user Not present . check your details.",400)
+    }
+
+    let id = incomingRefresToken?._id
+    const {accessToken,refreshToken} = await generateTokens(id)
+
+  const option = {
+        httpOnly:true,
+        secure:true
+    }
+
+    res.cookie("accessToken",accessToken,option)
+    res.cookie("refreshToken",refreshToken,option)
+
+    res.status(200).json({
+        success:true,
+        message:"token reset successfully."
+    })
+})
+
+export const getCurrentUser = asyncHandler(async(req,res)=>{
+    res.status(200).json({
+        success:true,
+        message:"current user fetch successfully.",
+        user:req.user
+    })
 })
