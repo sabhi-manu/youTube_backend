@@ -1,5 +1,5 @@
 import User from "../models/user.model";
-import { AppEroor } from "../utils/Apperror";
+import  AppError  from "../utils/Apperror";
 import uploadOnCloudinary from "../utils/cloudinary";
 
 
@@ -9,18 +9,18 @@ try {
     const {oldPassword,newPassword} = req.body
 
     if(!oldPassword || !newPassword) {
-        throw new AppEroor(" invalid  details",400)
+        throw new AppError(" invalid  details",400)
     }
 
     const user = await User.findById(userId)
 
     if(!user){
-        throw new AppEroor("invalid user.",404)
+        throw new AppError("invalid user.",404)
     }
 
     const passwordCheck = await user.isPasswordCorrect(oldPassword)
     if(!passwordCheck){
-        throw new AppEroor("enter valid password.",400)
+        throw new AppError("enter valid password.",400)
     }
     user.password = newPassword
     await user.save({validateBeforeSave:false})
@@ -38,7 +38,7 @@ export  const updateAccoutDetails = async (req,res)=>{
     try {
         const {email,fullName} = req.body
         if(!email || !fullName){
-            throw new AppEroor ("details not provide",400)
+            throw new AppError ("details not provide",400)
         }
         const user = await User.findByIdAndUpdate(req.user?._id,{$set:{
             fullName,
@@ -58,14 +58,14 @@ export  const updateAccoutDetails = async (req,res)=>{
 export const updateUserAvatar = async (req,res)=>{
     try {
         const userId = req.user
-        const avatarImagePath = req.file?.avatar
+        const avatarImagePath = req.file?.path
         if(!avatarImagePath){
-            throw new AppEroor("provide correct image.",400)
+            throw new AppError("provide correct image.",400)
         }
 
         const uploadAvatar = await uploadOnCloudinary(avatarImagePath,"youTube/profile")
         if(!uploadAvatar){
-            throw new AppEroor("avatar is missing ",400)
+            throw new AppError("avatar is missing ",400)
         }
 
         const user = await User.findByIdAndUpdate(userId,{
@@ -86,14 +86,14 @@ export const updateUserAvatar = async (req,res)=>{
 export const updateUserCoverImage = async (req,res)=>{
     try {
         const userId = req.user
-        const coverImagePath = req.file?.coverImage
+        const coverImagePath = req.file?.path
         if(!coverImagePath){
-            throw new AppEroor("provide correct image.",400)
+            throw new AppError("provide correct image.",400)
         }
 
         const uploadCoverImage = await uploadOnCloudinary(coverImagePath,"youTube/profile")
         if(!uploadCoverImage){
-            throw new AppEroor("coverImage is missing ",400)
+            throw new AppError("coverImage is missing ",400)
         }
 
         const user = await User.findByIdAndUpdate(userId,{

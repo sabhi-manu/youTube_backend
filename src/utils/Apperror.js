@@ -1,4 +1,4 @@
-class AppEroor extends Error{
+class AppError extends Error{
     constructor( message = "Something went wrong",
     statusCode = 500,error=null){
         super(message)
@@ -8,4 +8,4 @@ class AppEroor extends Error{
         this.data = null
     }
 }
-export {AppEroor}
+export default AppError

@@ -1,5 +1,5 @@
 import express from "express"
-import { getCurrentUser, getUserChannelProfile, refreshTOkenController, userLoginController, userLogoutController, userRegisterController } from "../controllers/user.controller.js"
+import { getCurrentUser, getUserChannelProfile, getWatchHistory, refreshTOkenController, userLoginController, userLogoutController, userRegisterController } from "../controllers/user.controller.js"
 import upload from "../middlewares/multer.middleware.js"
 import { authMiddlewareJWT } from "../middlewares/auth.middleware.js"
 
@@ -23,4 +23,5 @@ route.post('/logout',authMiddlewareJWT,userLogoutController)
 route.post("/refresh_token",refreshTOkenController)
 route.get("/curret-user",authMiddlewareJWT,getCurrentUser)
 route.get("/channel_profile",authMiddlewareJWT,getUserChannelProfile)
+route.get("/history",authMiddlewareJWT,getWatchHistory)
 export default route

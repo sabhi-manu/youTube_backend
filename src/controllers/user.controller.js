@@ -1,8 +1,9 @@
-import { AppEroor } from "../utils/Apperror.js";
+import  AppError  from "../utils/Apperror.js";
 import { asyncHandler } from "../utils/asycnHandler.js";
 import User from "../models/user.model.js"
 import uploadOnCloudinary from "../utils/cloudinary.js";
-import Subscription from "../models/subscription.model.js";
+
+import mongoose from "mongoose";
 
 
 async function generateTokens(userId) {
@@ -19,7 +20,7 @@ async function generateTokens(userId) {
 
         return { accessToken, refreshToken }
     } catch (error) {
-        throw new AppEroor("Error in Token creation.", 400)
+        throw new AppError("Error in Token creation.", 400)
     }
 
 
@@ -32,20 +33,20 @@ export const userRegisterController = asyncHandler(async (req, res) => {
     if (
         [userName, email, fullName, password].some((field) => field?.trim() === "")
     ) {
-        throw new AppEroor("All details required.", 400)
+        throw new AppError("All details required.", 400)
     }
 
     const userExist = await User.findOne({ $or: [{ email }, { userName }] })
-    if (userExist) throw new AppEroor("usre already exist", 409)
+    if (userExist) throw new AppError("usre already exist", 409)
     console.log("file in controller ==>", req.files)
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
     const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
     console.log("file data from postman==>", avatarLocalPath, " ", coverImageLocalPath)
-    if (!avatarLocalPath) throw new AppEroor("avatar file is required.", 400)
+    if (!avatarLocalPath) throw new AppError("avatar file is required.", 400)
     const avatar = await uploadOnCloudinary(avatarLocalPath, "youTube/profile")
     const coverImage = await uploadOnCloudinary(coverImageLocalPath, "youTube/profile")
 
-    if (!avatar) throw new AppEroor("avatar file is required.", 400)
+    if (!avatar) throw new AppError("avatar file is required.", 400)
     console.log("final image url ==>", avatar.url, coverImage.url)
 
     const user = await User.create({
@@ -58,7 +59,7 @@ export const userRegisterController = asyncHandler(async (req, res) => {
     })
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken")
-    if (!createdUser) throw new AppEroor("user not register something went wrong.", 500)
+    if (!createdUser) throw new AppError("user not register something went wrong.", 500)
     return res.status(201).json({
         success: true,
         message: "user register successfully.",
@@ -70,18 +71,18 @@ export const userRegisterController = asyncHandler(async (req, res) => {
 export const userLoginController = asyncHandler(async (req, res) => {
     const { userName, email, password } = req.body
     if (!(email || userName)) {
-        throw new AppEroor("userName or email is required", 400)
+        throw new AppError("userName or email is required", 400)
     }
     const user = await User.findOne({
         $or: [{ email }, { userName }]
     })
     if (!user) {
-        throw new AppEroor("user Not present . check your details.", 400)
+        throw new AppError("user Not present . check your details.", 400)
     }
 
     const isPassword = await user.isPasswordCorrect(password)
     if (!isPassword) {
-        throw new AppEroor("user Not present . check your details.", 400)
+        throw new AppError("user Not present . check your details.", 400)
     }
 
     const { accessToken, refreshToken } = await generateTokens(user?._id)
@@ -109,7 +110,7 @@ export const userLogoutController = asyncHandler(async (req, res) => {
         req.user._id,
         {
             $set: {
-                refreshToken: undefined
+                refreshToken: ""
             }
         },
         {
@@ -132,7 +133,7 @@ export const userLogoutController = asyncHandler(async (req, res) => {
 export const refreshTOkenController = asyncHandler(async (req, res) => {
     const incomingRefresToken = req.cookies.refreshToken
     if (!incomingRefresToken) {
-        throw new AppEroor("user Not present . check your details.", 400)
+        throw new AppError("user Not present . check your details.", 400)
     }
 
     let id = incomingRefresToken?._id
@@ -164,7 +165,7 @@ export const getUserChannelProfile = async (req,res)=>{
     try {
       const {username} = req.params
       if(!username){
-        throw new AppEroor("user name is missing.",400)
+        throw new AppError("user name is missing.",400)
       }
     let channel = await  User.aggregate([
         {
@@ -222,7 +223,7 @@ export const getUserChannelProfile = async (req,res)=>{
       console.log("check the channel aggregate value ===>",channel)
 
       if(!channel?.length){
-        throw new AppEroor("channel not exist",400)
+        throw new AppError("channel not exist",400)
       }
       return res.status(200).json({
         success:true,
@@ -233,3 +234,51 @@ export const getUserChannelProfile = async (req,res)=>{
         console.log("error in getting user channle profile.==>",error)
     }
 }
+
+export const getWatchHistory = asyncHandler(async(req,res)=>{
+    const user = await User.aggregate([
+        {
+            $match: new mongoose.Types.ObjectId(req.user._id)
+        },
+        {
+            $lookup:{
+                from:"videos",
+                localField:"watchHistory",
+                foreignField:"_id",
+                as:"watchHistory",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        fullName:1,
+                                        userName:1,
+                                        avatar:1,
+                                        _id:0
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{$first:"$owner"}
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    console.log("check the user ==>",user)
+    return res.status(200).json({
+        success:true,
+        message:"history fetch successfully.",
+        data:user
+    })
+})
