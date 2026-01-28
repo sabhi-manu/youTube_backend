@@ -5,7 +5,7 @@ import userDetail from "./routes/userDetailsChange.route.js"
 import videoRoute from "./routes/video.route.js"
 import subscriptionRoute from "./routes/subscription.route.js"
 import tweetRoute from "./routes/tweet.route.js"
-
+import commentRoute from "./routes/comment.route.js"
 
 
 const app = express()
@@ -24,5 +24,7 @@ app.use("/api/user-change",userDetail)
 app.use("/api/videos",videoRoute)
 app.use("/api/subscriptions",subscriptionRoute)
 app.use("/api/tweet",tweetRoute)
+app.use("/api/comment",commentRoute)
+
 
 export default app
