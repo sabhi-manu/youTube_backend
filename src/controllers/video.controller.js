@@ -126,7 +126,8 @@ export const publishAVideo = asyncHandler(async (req, res) => {
 })
 
 export const getVideoById = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
+    const { videoId } = req.params;
+    const userId = req.user?._id
 
     if (!mongoose.Types.ObjectId.isValid(videoId)) {
         throw new AppError("Invalid video id", 400);
@@ -158,6 +159,32 @@ export const getVideoById = asyncHandler(async (req, res) => {
         },
         {
             $unwind: "$user"
+        },
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "video",
+                as: "likes"
+            }
+        },
+        {
+            $addFields: {
+                likesCount: { $size: "$likes" },
+                isLikedByCurrentUser: userId
+                    ? {
+                        $in: [
+                            new mongoose.Types.ObjectId(userId),
+                            "$likes.likedBy"
+                        ]
+                    }
+                    : false
+            }
+        },
+        {
+            $project: {
+                likes: 0
+            }
         }
     ])
 

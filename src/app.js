@@ -7,6 +7,8 @@ import subscriptionRoute from "./routes/subscription.route.js"
 import tweetRoute from "./routes/tweet.route.js"
 import commentRoute from "./routes/comment.route.js"
 import playListRoute from './routes/playList.route.js'
+import likeRoute from "./routes/like.route.js"
+
 
 const app = express()
 
@@ -26,5 +28,5 @@ app.use("/api/subscriptions",subscriptionRoute)
 app.use("/api/tweet",tweetRoute)
 app.use("/api/comment",commentRoute)
 app.use('/api/playlist',playListRoute)
-
+app.use("/api/likes",likeRoute)
 export default app
