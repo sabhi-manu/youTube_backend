@@ -8,8 +8,8 @@ const route = express.Router()
 
 
 route.post("/password",authMiddlewareJWT,changeCurrentPassword)
-route.patch("/user-details",authMiddlewareJWT,updateAccoutDetails)
+route.patch("/profile",authMiddlewareJWT,updateAccoutDetails)
 route.patch("/avatar",upload.single("avatar"),authMiddlewareJWT,updateUserAvatar)
-route.patch("/avatar",upload.single("coverImage"),authMiddlewareJWT,updateUserCoverImage)
+route.patch("/coverimage",upload.single("coverImage"),authMiddlewareJWT,updateUserCoverImage)
 
 export default route

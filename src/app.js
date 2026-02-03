@@ -9,6 +9,7 @@ import commentRoute from "./routes/comment.route.js"
 import playListRoute from './routes/playList.route.js'
 import likeRoute from "./routes/like.route.js"
 import dashBoardRoute from "./routes/dashboard.route.js"
+import errorHandler from "./middlewares/errorHandler.js"
 
 const app = express()
 
@@ -22,7 +23,7 @@ app.use("/test",(req,res)=>{
 })
 
 app.use("/api/user",userRoute)
-app.use("/api/user-change",userDetail)
+app.use("/api/user/details",userDetail)
 app.use("/api/videos",videoRoute)
 app.use("/api/subscriptions",subscriptionRoute)
 app.use("/api/tweet",tweetRoute)
@@ -30,4 +31,6 @@ app.use("/api/comment",commentRoute)
 app.use('/api/playlist',playListRoute)
 app.use("/api/likes",likeRoute)
 app.use("/api/dashboard",dashBoardRoute)
+
+app.use(errorHandler)
 export default app
