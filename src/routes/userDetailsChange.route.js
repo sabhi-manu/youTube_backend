@@ -1,7 +1,7 @@
 import express from "express"
-import { changeCurrentPassword, updateAccoutDetails, updateUserAvatar, updateUserCoverImage } from "../controllers/userDetails.controller"
-import { authMiddlewareJWT } from "../middlewares/auth.middleware"
-import upload from "../middlewares/multer.middleware"
+import { changeCurrentPassword, updateAccoutDetails, updateUserAvatar, updateUserCoverImage } from "../controllers/userDetails.controller.js"
+import { authMiddlewareJWT } from "../middlewares/auth.middleware.js"
+import upload from "../middlewares/multer.middleware.js"
 
 const route = express.Router()
 

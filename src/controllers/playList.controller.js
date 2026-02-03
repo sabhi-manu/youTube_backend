@@ -1,6 +1,6 @@
-import { asyncHandler } from "../utils/asycnHandler"
-import AppError from "../utils/Apperror"
-import PlayList from "../models/playlist.model"
+import { asyncHandler } from "../utils/asycnHandler.js"
+import AppError from "../utils/Apperror.js"
+import PlayList from "../models/playlist.model.js"
 import mongoose from "mongoose";
 
 export const createPlaylist = asyncHandler(async (req, res) => {

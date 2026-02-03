@@ -1,8 +1,8 @@
 import mongoose from "mongoose"
-import Video from "../models/video.model"
-import { asyncHandler } from "../utils/asycnHandler";
-import AppError from "../utils/Apperror";
-import uploadOnCloudinary from "../utils/cloudinary";
+import Video from "../models/video.model.js"
+import { asyncHandler } from "../utils/asycnHandler.js";
+import AppError from "../utils/Apperror.js";
+import uploadOnCloudinary from "../utils/cloudinary.js";
 
 
 

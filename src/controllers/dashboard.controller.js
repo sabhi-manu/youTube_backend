@@ -1,9 +1,9 @@
-import { asyncHandler } from "../utils/asycnHandler"
-import AppError from "../utils/Apperror"
-import Video from "../models/video.model"
-import User from "../models/user.model"
+import { asyncHandler } from "../utils/asycnHandler.js"
+import AppError from "../utils/Apperror.js"
+import Video from "../models/video.model.js"
+import User from "../models/user.model.js"
 import mongoose from "mongoose"
-import Subscription from "../models/subscription.model"
+import Subscription from "../models/subscription.model.js"
 
 export const getChannelStats = asyncHandler(async (req, res) => {
     // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
@@ -62,7 +62,7 @@ export const getChannelStats = asyncHandler(async (req, res) => {
 
      res.status(200).json({
         success:true,
-        data:stats
+        data:stat.jss
      })
 })
 

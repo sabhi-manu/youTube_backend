@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import { asyncHandler } from "../utils/asycnHandler";
-import AppError from "../utils/Apperror";
-import Video from "../models/video.model";
-import Comment from "../models/comment.model";
+import { asyncHandler } from "../utils/asycnHandler.js";
+import AppError from "../utils/Apperror.js";
+import Video from "../models/video.model.js";
+import Comment from "../models/comment.model.js";
 
 
 export const getVideoComments = asyncHandler(async (req, res) => {

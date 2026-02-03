@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-import { AppEroor } from "../utils/Apperror.js";
+import AppError from "../utils/Apperror.js";
 import { asyncHandler } from "../utils/asycnHandler.js";
 import jwt from "jsonwebtoken"
 
@@ -9,7 +9,7 @@ try {
 
     console.log('token ==>',token)
     if(!token) {
-        throw new AppEroor ("Unauthorized request",403)
+        throw new AppError ("Unauthorized request",403)
     }
    const decodedToken =  jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
 console.log('decoded token ==>',decodedToken)

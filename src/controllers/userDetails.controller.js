@@ -1,6 +1,6 @@
-import User from "../models/user.model";
-import  AppError  from "../utils/Apperror";
-import uploadOnCloudinary from "../utils/cloudinary";
+import User from "../models/user.model.js";
+import  AppError  from "../utils/Apperror.js";
+import uploadOnCloudinary from "../utils/cloudinary.js";
 
 
 export const changeCurrentPassword = async (req,res)=>{

@@ -1,6 +1,6 @@
 import express from "express"
-import { authMiddlewareJWT } from "../middlewares/auth.middleware"
-import { getLikedVideos, toggleTweetLike, toggleVideoLike } from "../controllers/like.controller"
+import { authMiddlewareJWT } from "../middlewares/auth.middleware.js"
+import { getLikedVideos, toggleTweetLike, toggleVideoLike } from "../controllers/like.controller.js"
 
 
 const route = express.Router()

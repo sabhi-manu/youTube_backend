@@ -1,6 +1,6 @@
 import express from "express"
-import { authMiddlewareJWT } from "../middlewares/auth.middleware"
-import { getChannelStats, getChannelVideos } from "../controllers/dashboard.controller"
+import { authMiddlewareJWT } from "../middlewares/auth.middleware.js"
+import { getChannelStats, getChannelVideos } from "../controllers/dashboard.controller.js"
 
 const route = express.Router()
 

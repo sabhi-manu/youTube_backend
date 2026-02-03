@@ -1,4 +1,4 @@
-import { asyncHandler } from "../utils/asycnHandler";
+import { asyncHandler } from "../utils/asycnHandler.js";
 import appError from "../utils/Apperror.js"
 import Tweet from "../models/tweet.model.js";
 import User from "../models/user.model.js";

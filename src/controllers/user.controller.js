@@ -57,9 +57,17 @@ export const userRegisterController = asyncHandler(async (req, res) => {
         avatar: avatar.url,
         coverImage: coverImage.url || ""
     })
-
+      const { accessToken, refreshToken } = await generateTokens(user?._id)
     const createdUser = await User.findById(user._id).select("-password -refreshToken")
+     const option = {
+        httpOnly: true,
+        secure: true
+    }
+
+    res.cookie("accessToken", accessToken, option)
+    res.cookie("refreshToken", refreshToken, option)
     if (!createdUser) throw new AppError("user not register something went wrong.", 500)
+        console.log("final data of register user ===>",createdUser)
     return res.status(201).json({
         success: true,
         message: "user register successfully.",

@@ -1,6 +1,6 @@
 import express from 'express'
-import { authMiddlewareJWT } from '../middlewares/auth.middleware'
-import { addVideoToPlaylist, createPlaylist, deletePlaylist, getPlaylistById, getUserPlaylists, updatePlaylist } from '../controllers/playList.controller'
+import { authMiddlewareJWT } from '../middlewares/auth.middleware.js'
+import { addVideoToPlaylist, createPlaylist, deletePlaylist, getPlaylistById, getUserPlaylists, updatePlaylist } from '../controllers/playList.controller.js'
 
 const route = express.Router()
 
