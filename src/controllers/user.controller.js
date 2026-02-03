@@ -1,8 +1,8 @@
-import  AppError  from "../utils/Apperror.js";
+import AppError from "../utils/Apperror.js";
 import { asyncHandler } from "../utils/asycnHandler.js";
 import User from "../models/user.model.js"
 import uploadOnCloudinary from "../utils/cloudinary.js";
-
+import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
 
 
@@ -57,9 +57,9 @@ export const userRegisterController = asyncHandler(async (req, res) => {
         avatar: avatar.url,
         coverImage: coverImage.url || ""
     })
-      const { accessToken, refreshToken } = await generateTokens(user?._id)
+    const { accessToken, refreshToken } = await generateTokens(user?._id)
     const createdUser = await User.findById(user._id).select("-password -refreshToken")
-     const option = {
+    const option = {
         httpOnly: true,
         secure: true
     }
@@ -67,7 +67,7 @@ export const userRegisterController = asyncHandler(async (req, res) => {
     res.cookie("accessToken", accessToken, option)
     res.cookie("refreshToken", refreshToken, option)
     if (!createdUser) throw new AppError("user not register something went wrong.", 500)
-        console.log("final data of register user ===>",createdUser)
+    console.log("final data of register user ===>", createdUser)
     return res.status(201).json({
         success: true,
         message: "user register successfully.",
@@ -78,8 +78,8 @@ export const userRegisterController = asyncHandler(async (req, res) => {
 
 export const userLoginController = asyncHandler(async (req, res) => {
     const { userName, email, password } = req.body
-    if (!(email || userName)) {
-        throw new AppError("userName or email is required", 400)
+    if (!(email && userName && password)) {
+        throw new AppError("Details  is required", 400)
     }
     const user = await User.findOne({
         $or: [{ email }, { userName }]
@@ -103,6 +103,7 @@ export const userLoginController = asyncHandler(async (req, res) => {
 
     res.cookie("accessToken", accessToken, option)
     res.cookie("refreshToken", refreshToken, option)
+    console.log("login user details. ==>", loggedInUser)
     res.status(200).json({
         success: true,
         message: "user Login successfully.",
@@ -114,7 +115,7 @@ export const userLoginController = asyncHandler(async (req, res) => {
 
 export const userLogoutController = asyncHandler(async (req, res) => {
     console.log('user logout controller ==>')
-    await User.findByIdAndDelete(
+    await User.findByIdAndUpdate(
         req.user._id,
         {
             $set: {
@@ -143,17 +144,19 @@ export const refreshTOkenController = asyncHandler(async (req, res) => {
     if (!incomingRefresToken) {
         throw new AppError("user Not present . check your details.", 400)
     }
-
-    let id = incomingRefresToken?._id
+    console.log("incomingRefresToken token ===>", incomingRefresToken)
+    const decode = jwt.verify(incomingRefresToken, process.env.REFRESH_TOKEN_SECRET)
+    let id = decode?._id
+    console.log("check the user id for refresh token ==>", id)
     const { accessToken, refreshToken } = await generateTokens(id)
 
     const option = {
         httpOnly: true,
         secure: true
     }
-
     res.cookie("accessToken", accessToken, option)
     res.cookie("refreshToken", refreshToken, option)
+    console.log("old refresh token ==>", incomingRefresToken, "new refresh token ===>", refreshToken)
 
     res.status(200).json({
         success: true,
@@ -169,124 +172,130 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
     })
 })
 
-export const getUserChannelProfile = async (req,res)=>{
+export const getUserChannelProfile = async (req, res) => {
     try {
-      const {username} = req.params
-      if(!username){
-        throw new AppError("user name is missing.",400)
-      }
-    let channel = await  User.aggregate([
-        {
-            $match:{ userName:username?.toLowerCase() }
-        },
-        {
-            $lookup:{
-                from:"subscriptions",
-                localField:"_id",
-                foreignField:"channel",
-                as:"subscribers"
-            }
-        },
-        {
-            $lookup:{
-                from:"subscriptions",
-                localField:"_id",
-                foreignField:"subscriber",
-                as:"subscribedTo"
-            }
-        },
-        {
-            $addFields:{
-                subscribersCount:{
-                    $size:"$subscribers"
-                },
-                subscribeToCount:{
-                    $size:"$subscribedTo"
-                },
-                isSubscribe:{
-                    $cond:{
-                        if: {$in: [req.user?._id,"$subscribers.subscriber"]},
-                        then:true,
-                        else:false
+        const { username } = req.params
+        if (!username) {
+            throw new AppError("user name is missing.", 400)
+        }
+        let channel = await User.aggregate([
+            {
+                $match: { userName: username?.toLowerCase() }
+            },
+            {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "channel",
+                    as: "subscribers"
+                }
+            },
+            {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "subscriber",
+                    as: "subscribedTo"
+                }
+            },
+            {
+                $addFields: {
+                    subscribersCount: {
+                        $size: "$subscribers"
+                    },
+                    subscribeToCount: {
+                        $size: "$subscribedTo"
+                    },
+                    isSubscribe: {
+                        $cond: {
+                            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                            then: true,
+                            else: false
+                        }
                     }
                 }
-            }
-        },
-        {
-            $project:{
-                fullName:1,
-                userName:1,
-                subscribersCount:1,
-                subscribeToCount:1,
-                isSubscribe:1,
-                email:1,
-                avatar:1,
-                coverImage:1,
-                _id:0
+            },
+            {
+                $project: {
+                    fullName: 1,
+                    userName: 1,
+                    subscribersCount: 1,
+                    subscribeToCount: 1,
+                    isSubscribe: 1,
+                    email: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                    _id: 0
 
+                }
             }
+        ])
+
+        console.log("check the channel aggregate value ===>", channel)
+
+        if (!channel?.length) {
+            throw new AppError("channel not exist", 400)
         }
-      ])
-
-      console.log("check the channel aggregate value ===>",channel)
-
-      if(!channel?.length){
-        throw new AppError("channel not exist",400)
-      }
-      return res.status(200).json({
-        success:true,
-        message:"data fetch successfully.",
-        data:channel[0]
-      })
+        return res.status(200).json({
+            success: true,
+            message: "data fetch successfully.",
+            data: channel[0]
+        })
     } catch (error) {
-        console.log("error in getting user channle profile.==>",error)
+        console.log("error in getting user channle profile.==>", error)
     }
 }
 
-export const getWatchHistory = asyncHandler(async(req,res)=>{
+export const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
-            $match: new mongoose.Types.ObjectId(req.user._id)
+            $match:{_id: new mongoose.Types.ObjectId(req.user._id)}
         },
         {
-            $lookup:{
-                from:"videos",
-                localField:"watchHistory",
-                foreignField:"_id",
-                as:"watchHistory",
-                pipeline:[
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [
                     {
-                        $lookup:{
-                            from:"users",
-                            localField:"owner",
-                            foreignField:"_id",
-                            as:"owner",
-                            pipeline:[
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
                                 {
-                                    $project:{
-                                        fullName:1,
-                                        userName:1,
-                                        avatar:1,
-                                        _id:0
+                                    $project: {
+                                        fullName: 1,
+                                        userName: 1,
+                                        avatar: 1,
+                                        _id: 0
                                     }
                                 }
                             ]
                         }
                     },
                     {
-                        $addFields:{
-                            owner:{$first:"$owner"}
+                        $addFields: {
+                            owner: { $first: "$owner" }
                         }
                     }
                 ]
             }
-        }
+        },
+    {
+      $project: {
+        watchHistory: 1,
+        _id: 0
+      }
+    }
     ])
 
-    console.log("check the user ==>",user)
+    console.log("check the user ==>", user)
     return res.status(200).json({
-        success:true,
-        message:"history fetch successfully.",
-        data:user
+        success: true,
+        message: "history fetch successfully.",
+        data:  user[0]?.watchHistory || []
     })
 })

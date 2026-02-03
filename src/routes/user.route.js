@@ -22,6 +22,6 @@ route.post('/logout',authMiddlewareJWT,userLogoutController)
 
 route.post("/refresh_token",refreshTOkenController)
 route.get("/curret_user",authMiddlewareJWT,getCurrentUser)
-route.get("/channel_profile",authMiddlewareJWT,getUserChannelProfile)
+route.get("/channel_profile/:username",authMiddlewareJWT,getUserChannelProfile)
 route.get("/history",authMiddlewareJWT,getWatchHistory)
 export default route
