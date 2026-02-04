@@ -104,7 +104,7 @@ export const addComment = asyncHandler(async (req, res) => {
 export const updateComment = asyncHandler(async (req, res) => {
     const {commentId} = req.params;
     const userId = req.user._id;
-    const {content} = req.body;
+    const content = req.body.content;
 
     if(!mongoose.Types.ObjectId.isValid(commentId) ){
         throw new AppError("comment id not valid.",400)

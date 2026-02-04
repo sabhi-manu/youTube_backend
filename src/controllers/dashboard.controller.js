@@ -62,7 +62,7 @@ export const getChannelStats = asyncHandler(async (req, res) => {
 
      res.status(200).json({
         success:true,
-        data:stat.jss
+        data:stats
      })
 })
 

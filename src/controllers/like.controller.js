@@ -90,7 +90,7 @@ export const toggleTweetLike = asyncHandler(async (req, res) => {
 export const getLikedVideos = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
     const {page=1,limit=10} = req.query;
-
+console.log("get like video controller ==>",userId)
     const likedVideos = await Like.aggregate([
         {
             $match: { likedBy:new mongoose.Types.ObjectId(userId) }
@@ -148,12 +148,13 @@ export const getLikedVideos = asyncHandler(async (req, res) => {
             $unwind: "$videos"
         },
        
-        {$skip:(Nmuber(page)-1)* Number(limit) },
+        { $skip: (Number(page) - 1) * Number(limit) },
         {$limit:Number(limit)}
     ])
 
       const totalLikedVideos = await Like.countDocuments({
-        likedBy: userId
+        likedBy: userId,
+        video: { $exists: true }
     });
 
     res.status(200).json({

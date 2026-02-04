@@ -94,8 +94,8 @@ export const publishAVideo = asyncHandler(async (req, res) => {
         throw new AppError("thumbnail file  required .", 400)
     }
 
-    const videoUpload = await uploadOnCloudinary(videoFile, "youTube/videos")
-    const thumbnailUpload = await uploadOnCloudinary(thumbnailFile, "youTube/videos")
+    const videoUpload = await uploadOnCloudinary(videoFile, "youTube/videos/video")
+    const thumbnailUpload = await uploadOnCloudinary(thumbnailFile, "youTube/videos/thumbnail")
 
     if (!videoUpload?.url) {
         throw new AppError("Video upload failed", 400);
@@ -106,14 +106,13 @@ export const publishAVideo = asyncHandler(async (req, res) => {
     }
 
 
-
     const video = await Video.create({
         videoFile: videoUpload.url,
         thumbnail: thumbnailUpload.url,
         owner: userId,
         title,
         description,
-        duration: videoUrl.duration
+        duration: videoUpload.duration
     })
 
     const createVideo = await Video.findById(video._id)

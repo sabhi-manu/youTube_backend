@@ -5,9 +5,9 @@ import { addVideoToPlaylist, createPlaylist, deletePlaylist, getPlaylistById, ge
 const route = express.Router()
 
 route.post('/',authMiddlewareJWT,createPlaylist)
-route.get('/user/:playlistId',authMiddlewareJWT,getUserPlaylists)
+route.get('/user/:userId',authMiddlewareJWT,getUserPlaylists)
 
-route.post('/:playlistId',authMiddlewareJWT,getPlaylistById)
+route.get('/:playlistId',authMiddlewareJWT,getPlaylistById)
 route.patch('/add/:playlistId',authMiddlewareJWT,addVideoToPlaylist)
 route.delete('/:playlistId',authMiddlewareJWT,deletePlaylist)
 
