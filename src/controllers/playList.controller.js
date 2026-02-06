@@ -4,24 +4,35 @@ import PlayList from "../models/playlist.model.js"
 import mongoose from "mongoose";
 
 export const createPlaylist = asyncHandler(async (req, res) => {
-    const { name, description } = req.body;
+    const { name, description, videoIds = [] } = req.body;
     const owner = req.user._id;
+
     if (!name || !name.trim()) {
         throw new AppError("Playlist name is required", 400);
+    }
+
+    if (!Array.isArray(videoIds)) {
+        throw new AppError("videoIds must be an array", 400);
+    }
+
+    if (!videoIds.every(id => mongoose.Types.ObjectId.isValid(id))) {
+        throw new AppError("One or more video IDs are invalid", 400);
     }
 
     const playList = await PlayList.create({
         name: name.trim(),
         description: description?.trim() || "",
         owner,
-        videos: []
-    })
+        videos: videoIds
+    });
+
     res.status(201).json({
         success: true,
-        message: "PlayList create successfully.",
-        playList
-    })
-})
+        message: "Playlist created successfully",
+        data: playList
+    });
+});
+
 
 
 export const getUserPlaylists = asyncHandler(async (req, res) => {
@@ -53,6 +64,7 @@ export const getUserPlaylists = asyncHandler(async (req, res) => {
             $project: {
                 name: 1,
                 description: 1,
+                videos: 1, 
                 totalVideos: 1,
                 totalViews: 1,
                 thumbnail: 1,

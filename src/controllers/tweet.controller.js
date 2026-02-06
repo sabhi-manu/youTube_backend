@@ -6,37 +6,38 @@ import mongoose from "mongoose";
 
 
 export const createTweet = asyncHandler(async (req, res) => {
-    const { content } = req.body;
-    const userId = req.user._id
-    if (!content || !content.trim()) {
-        throw new appError("Content is required.", 400);
-    }
+  const { content } = req.body;
+  const userId = req.user._id;
 
-    const user = await User.findById(userId)
-    if (!user) {
-        throw new appError("User not found.", 401);
-    }
+  if (!content || !content.trim()) {
+    throw new AppError("Content is required.", 400);
+  }
 
-    const tweet = await Tweet.create({
-        owner: user._id,
-        content: content.trim()
-    })
+  // Create tweet
+  const tweet = await Tweet.create({
+    owner: userId,
+    content: content.trim(),
+  });
 
-    if (!tweet) {
-        throw new appError("Tweet creation failed.", 500);
-    }
-    res.status(201).json({
-        success: true,
-        message: "Tweet created successfully.",
-        data: tweet
-    })
-})
+  // Populate owner for frontend
+  const populatedTweet = await Tweet.findById(tweet._id)
+    .populate("owner", "userName avatar");
+
+  res.status(201).json({
+    success: true,
+    message: "Tweet created successfully.",
+    data: {
+      ...populatedTweet.toObject(),
+      likeCount: 0,
+      isLiked: false,
+    },
+  });
+});
+
 
 export const getUserTweets = asyncHandler(async (req, res) => {
-    const userId = req.user._id;
-
-
-
+    
+    const {userId} = req.params
     const tweets = await Tweet.aggregate([
         {
             $match: {

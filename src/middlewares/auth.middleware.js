@@ -22,6 +22,6 @@ console.log('decoded token ==>',decodedToken)
    next()
 
 } catch (error) {
-    throw new AppEroor("Error in middleware .",400)
+    throw new AppError("Error in middleware .",400)
 }
 })

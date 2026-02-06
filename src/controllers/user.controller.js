@@ -225,7 +225,7 @@ export const getUserChannelProfile = async (req, res) => {
                     email: 1,
                     avatar: 1,
                     coverImage: 1,
-                    _id: 0
+                   
 
                 }
             }

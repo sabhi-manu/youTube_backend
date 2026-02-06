@@ -150,7 +150,8 @@ export const getVideoById = asyncHandler(async (req, res) => {
                     {
                         $project: {
                             avatar: 1,
-                            userName: 1
+                            userName: 1,
+                            fullName:1
                         }
                     }
                 ]
@@ -296,3 +297,24 @@ export const togglePublishStatus = asyncHandler(async (req, res) => {
         }
     })
 })
+
+export const getUserVideo = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+console.log("check the video id ==>",userId)
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new AppError("Invalid user id", 400);
+    }
+
+    const videos = await Video.find({ owner: userId }).sort({ createdAt: -1 })
+
+    res.status(200).json({
+      success: true,
+      message: "User videos fetched successfully",
+      data: videos, 
+    });
+
+  } catch (error) {
+    next(error); 
+  }
+};

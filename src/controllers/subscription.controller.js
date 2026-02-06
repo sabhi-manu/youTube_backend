@@ -15,10 +15,6 @@ export const toggleSubscription = asyncHandler(async (req, res) => {
         throw new appError("You cannot subscribe to your own channel.", 400)
     }
 
-    const channelUser = await Subscription.findById(channelId)
-    if (!channelUser) {
-        throw new appError("channel not exist.", 400)
-    }
 
     const existingSubscription = await Subscription.findOne({
         channel: channelId,
@@ -103,10 +99,11 @@ export const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 // controller to return channel list to which user has subscribed
 export const getSubscribedChannels = asyncHandler(async (req, res) => {
     const { subscriberId } = req.params;
+     const { page = 1, limit = 10 } = req.query;
     if(!mongoose.Types.ObjectId.isValid(subscriberId) ){
         throw new appError("invalid subscriberId .",400)
     }
-
+console.log('check the subscibtion chnalle id ===>',subscriberId)
     const subscriberList = await Subscription.aggregate([
         {
             $match:{
@@ -137,11 +134,12 @@ export const getSubscribedChannels = asyncHandler(async (req, res) => {
         { $limit: Number(limit) }
     ])
 
+    console.log('check the result of subscription channel list ===>',subscriberList)
      const totalSubscriber = await Subscription.countDocuments( {subscriber: new mongoose.Types.ObjectId(subscriberId)})
     res.status(200).json({
         success: true,
         message: "fetch successfully.",
-        data: subscribers,
+        data: subscriberList,
         pagination: {
             totalSubscriber,
             currentPage: Number(page),
