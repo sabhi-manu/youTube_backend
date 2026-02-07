@@ -21,13 +21,13 @@ app.use(cookieParser())
 
 app.use(
   cors({
-    origin: ["http://localhost:5173","https://you-tube-client-orpin.vercel.app/"], 
+    origin: ["https://you-tube-client-orpin.vercel.app"], 
     credentials: true,              
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
+app.options("*", cors());
 
 app.use("/test",(req,res)=>{
     res.send("server runing successfully.")

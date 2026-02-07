@@ -61,7 +61,8 @@ export const userRegisterController = asyncHandler(async (req, res) => {
     const createdUser = await User.findById(user._id).select("-password -refreshToken")
     const option = {
         httpOnly: true,
-        secure: true
+        secure: true,
+          sameSite: "none", 
     }
 
     res.cookie("accessToken", accessToken, option)
@@ -98,7 +99,8 @@ export const userLoginController = asyncHandler(async (req, res) => {
 
     const option = {
         httpOnly: true,
-        secure: true
+        secure: true,
+          sameSite: "none", 
     }
 
     res.cookie("accessToken", accessToken, option)
@@ -129,7 +131,8 @@ export const userLogoutController = asyncHandler(async (req, res) => {
 
     const option = {
         httpOnly: true,
-        secure: true
+        secure: true,
+          sameSite: "none", 
     }
     res.clearCookie("accessToken", option)
     res.clearCookie("refreshToken", option)
