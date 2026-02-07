@@ -3,7 +3,7 @@ import Video from "../models/video.model.js"
 import { asyncHandler } from "../utils/asycnHandler.js";
 import AppError from "../utils/Apperror.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
-
+import User from "../models/user.model.js"
 
 
 export const getAllVideos = async (req, res) => {
@@ -195,7 +195,14 @@ export const getVideoById = asyncHandler(async (req, res) => {
     await Video.findByIdAndUpdate(videoId, {
         $inc: { views: 1 }
     })
-
+if (userId) {
+        await User.findByIdAndUpdate(
+            userId,
+            {
+                $addToSet: { watchHistory: videoId }
+            }
+        );
+    }
     res.status(200).json({
         success: true,
         message: 'video published successfully.',

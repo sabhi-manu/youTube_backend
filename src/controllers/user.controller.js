@@ -168,7 +168,7 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
     res.status(200).json({
         success: true,
         message: "current user fetch successfully.",
-        user: req.user
+        data: req.user
     })
 })
 

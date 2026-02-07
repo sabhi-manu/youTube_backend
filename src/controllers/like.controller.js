@@ -134,6 +134,7 @@ console.log("get like video controller ==>",userId)
                      {
                         $project: {
                             title: 1,
+                            description:1,
                             thumbnail: 1,
                             duration: 1,
                             views: 1,

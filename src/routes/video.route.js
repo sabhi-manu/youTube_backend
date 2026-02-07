@@ -5,9 +5,9 @@ import { authMiddlewareJWT } from "../middlewares/auth.middleware.js"
 
 const route = express.Router()
 
+route.get("/", getAllVideos)
 route.use(authMiddlewareJWT)
 
-route.get("/", getAllVideos)
 route.post("/", upload.fields([
     {
         name: "video",
