@@ -1,133 +1,61 @@
-import AppError from "../utils/Apperror.js";
 import { asyncHandler } from "../utils/asycnHandler.js";
-import User from "../models/user.model.js"
-import uploadOnCloudinary from "../utils/cloudinary.js";
-import jwt from "jsonwebtoken"
-import mongoose from "mongoose";
-
-
-async function generateTokens(userId) {
-    console.log('check the user id ==>', userId)
-    try {
-        const user = await User.findById(userId)
-        const accessToken = await user.generateAccessToken()
-        const refreshToken = await user.generateRefreshToken()
-
-        console.log('check token ==>', accessToken, ' ', refreshToken)
-        user.refreshToken = refreshToken
-        await user.save({ validateBeforeSave: false })
-        console.log('user check ==>', user)
-
-        return { accessToken, refreshToken }
-    } catch (error) {
-        throw new AppError("Error in Token creation.", 400)
-    }
-
-
-}
+import userService from "../services/user.service.js";
+import { redisClient } from "../config/redis/redis.js";
 
 
 export const userRegisterController = asyncHandler(async (req, res) => {
-    console.log("data from postman==>", req.body)
-    let { userName, email, fullName, password } = req.body
-    if (
-        [userName, email, fullName, password].some((field) => field?.trim() === "")
-    ) {
-        throw new AppError("All details required.", 400)
-    }
+    console.log("checking data coming in controller : register =>",req.body,req.files)
+    const result = await userService.registerUser({
+        body: req.body,
+        files: req.files
+    });
 
-    const userExist = await User.findOne({ $or: [{ email }, { userName }] })
-    if (userExist) throw new AppError("usre already exist", 409)
-    console.log("file in controller ==>", req.files)
-    const avatarLocalPath = req.files?.avatar?.[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
-    console.log("file data from postman==>", avatarLocalPath, " ", coverImageLocalPath)
-    if (!avatarLocalPath) throw new AppError("avatar file is required.", 400)
-    const avatar = await uploadOnCloudinary(avatarLocalPath, "youTube/profile")
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath, "youTube/profile")
-
-    if (!avatar) throw new AppError("avatar file is required.", 400)
-    console.log("final image url ==>", avatar.url, coverImage.url)
-
-    const user = await User.create({
-        userName: userName.toLowerCase().trim(),
-        email: email.toLowerCase().trim(),
-        fullName: fullName.trim(),
-        password,
-        avatar: avatar.url,
-        coverImage: coverImage.url || ""
-    })
-    const { accessToken, refreshToken } = await generateTokens(user?._id)
-    const createdUser = await User.findById(user._id).select("-password -refreshToken")
-    const option = {
+    const options = {
         httpOnly: true,
         secure: true,
-          sameSite: "none", 
-    }
+        sameSite: "none"
+    };
 
-    res.cookie("accessToken", accessToken, option)
-    res.cookie("refreshToken", refreshToken, option)
-    if (!createdUser) throw new AppError("user not register something went wrong.", 500)
-    console.log("final data of register user ===>", createdUser)
+    res.cookie("accessToken", result.accessToken, options);
+    res.cookie("refreshToken", result.refreshToken, options);
+
     return res.status(201).json({
         success: true,
-        message: "user register successfully.",
-        data: createdUser
-    })
-})
-
+        message: "User registered successfully",
+        data: result.user
+    });
+});
 
 export const userLoginController = asyncHandler(async (req, res) => {
-    const { userName, email, password } = req.body
-    if (!(email && userName && password)) {
-        throw new AppError("Details  is required", 400)
-    }
-    const user = await User.findOne({
-        $or: [{ email }, { userName }]
-    })
-    if (!user) {
-        throw new AppError("user Not present . check your details.", 400)
-    }
 
-    const isPassword = await user.isPasswordCorrect(password)
-    if (!isPassword) {
-        throw new AppError("user Not present . check your details.", 400)
-    }
+  const result = await userService.logInUser(req.body)
 
-    const { accessToken, refreshToken } = await generateTokens(user?._id)
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
-
+   
     const option = {
         httpOnly: true,
         secure: true,
           sameSite: "none", 
     }
 
-    res.cookie("accessToken", accessToken, option)
-    res.cookie("refreshToken", refreshToken, option)
-    console.log("login user details. ==>", loggedInUser)
+    res.cookie("accessToken", result.accessToken, option)
+    res.cookie("refreshToken", result.refreshToken, option)
+    console.log("login user details. ==>", result.user)
     res.status(200).json({
         success: true,
         message: "user Login successfully.",
-        data: loggedInUser
+        data: result.user
     })
 
 
 })
 
 export const userLogoutController = asyncHandler(async (req, res) => {
-    console.log('user logout controller ==>')
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $set: {
-                refreshToken: ""
-            }
-        },
-        {
-            new: true
-        }
-    )
+
+    const accessToken = req.cookies?.accessToken || 
+        req.header("Authorization")?.replace("Bearer ", "")
+
+
+    const result = await userService.logoutUser(req.user._id,accessToken)
 
     const option = {
         httpOnly: true,
@@ -142,24 +70,19 @@ export const userLogoutController = asyncHandler(async (req, res) => {
     })
 })
 
+
 export const refreshTOkenController = asyncHandler(async (req, res) => {
     const incomingRefresToken = req.cookies.refreshToken
-    if (!incomingRefresToken) {
-        throw new AppError("user Not present . check your details.", 400)
-    }
-    console.log("incomingRefresToken token ===>", incomingRefresToken)
-    const decode = jwt.verify(incomingRefresToken, process.env.REFRESH_TOKEN_SECRET)
-    let id = decode?._id
-    console.log("check the user id for refresh token ==>", id)
-    const { accessToken, refreshToken } = await generateTokens(id)
+   const result = await userService.refreshUserToken(incomingRefresToken)
 
     const option = {
-        httpOnly: true,
-        secure: true
+         httpOnly: true,
+        secure: true,
+        sameSite: "none"
     }
-    res.cookie("accessToken", accessToken, option)
-    res.cookie("refreshToken", refreshToken, option)
-    console.log("old refresh token ==>", incomingRefresToken, "new refresh token ===>", refreshToken)
+    res.cookie("accessToken", result.accessToken, option)
+    res.cookie("refreshToken", result.refreshToken, option)
+   
 
     res.status(200).json({
         success: true,
@@ -176,129 +99,42 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
 export const getUserChannelProfile = async (req, res) => {
-    try {
-        const { username } = req.params
-        if (!username) {
-            throw new AppError("user name is missing.", 400)
-        }
-        let channel = await User.aggregate([
-            {
-                $match: { userName: username?.toLowerCase() }
-            },
-            {
-                $lookup: {
-                    from: "subscriptions",
-                    localField: "_id",
-                    foreignField: "channel",
-                    as: "subscribers"
-                }
-            },
-            {
-                $lookup: {
-                    from: "subscriptions",
-                    localField: "_id",
-                    foreignField: "subscriber",
-                    as: "subscribedTo"
-                }
-            },
-            {
-                $addFields: {
-                    subscribersCount: {
-                        $size: "$subscribers"
-                    },
-                    subscribeToCount: {
-                        $size: "$subscribedTo"
-                    },
-                    isSubscribe: {
-                        $cond: {
-                            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-                            then: true,
-                            else: false
-                        }
-                    }
-                }
-            },
-            {
-                $project: {
-                    fullName: 1,
-                    userName: 1,
-                    subscribersCount: 1,
-                    subscribeToCount: 1,
-                    isSubscribe: 1,
-                    email: 1,
-                    avatar: 1,
-                    coverImage: 1,
-                   
+    
+     const { username } = req.params
+     const userId = req.user._id
+        
+      const cacheKey = `user:profile:${userId}`;
 
-                }
-            }
-        ])
+       const cachedData = await redisClient.get(cacheKey);
 
-        console.log("check the channel aggregate value ===>", channel)
-
-        if (!channel?.length) {
-            throw new AppError("channel not exist", 400)
-        }
-        return res.status(200).json({
-            success: true,
-            message: "data fetch successfully.",
-            data: channel[0]
-        })
-    } catch (error) {
-        console.log("error in getting user channle profile.==>", error)
+       if (cachedData) {
+        console.log(" Cache HIT , user profile ==>");
+        return res.status(200).json(JSON.parse(cachedData));
     }
+
+    const data = await userService.getUserChannelProfile(
+        username,
+        req.user?._id
+    )
+
+    await redisClient.set(cacheKey, JSON.stringify(data), "EX", 3600);
+
+console.log("cache miss , user profile ==>")
+        res.status(200).json({
+        success: true,
+        message: "Data fetched successfully",
+        data
+    })
+    
 }
 
-export const getWatchHistory = asyncHandler(async (req, res) => {
-    const user = await User.aggregate([
-        {
-            $match:{_id: new mongoose.Types.ObjectId(req.user._id)}
-        },
-        {
-            $lookup: {
-                from: "videos",
-                localField: "watchHistory",
-                foreignField: "_id",
-                as: "watchHistory",
-                pipeline: [
-                    {
-                        $lookup: {
-                            from: "users",
-                            localField: "owner",
-                            foreignField: "_id",
-                            as: "owner",
-                            pipeline: [
-                                {
-                                    $project: {
-                                        fullName: 1,
-                                        userName: 1,
-                                        avatar: 1,
-                                        _id: 0
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        $addFields: {
-                            owner: { $first: "$owner" }
-                        }
-                    }
-                ]
-            }
-        },
-    {
-      $project: {
-        watchHistory: 1,
-        _id: 0
-      }
-    }
-    ])
+export const getWatchHistoryController = asyncHandler(async (req, res) => {
 
-    console.log("check the user ==>", user)
-    return res.status(200).json({
+    const data = await userService.getUserWatchHistory(req.user?._id)
+
+    res.status(200).json({
         success: true,
-        message: "history fetch successfully.",
-        data:  user[0]?.watchHistory || []
+        message: "History fetched successfully",
+        data
     })
 })

@@ -14,7 +14,7 @@ const uploadOnCloudinary = async (localFilePath, folder = "youTube") => {
   try {
     console.log("local fiel image ==>", localFilePath)
     if (!localFilePath) return null
-    //upload the file on cloudinary
+    
     let response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
       folder
@@ -30,7 +30,7 @@ const uploadOnCloudinary = async (localFilePath, folder = "youTube") => {
     if (fs.existsSync(localFilePath)) {
       fs.unlinkSync(localFilePath);
     }
-    throw error;
+throw new Error("Cloudinary upload failed");
   }
 }
 

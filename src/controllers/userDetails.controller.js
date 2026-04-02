@@ -1,6 +1,8 @@
-import User from "../models/user.model.js";
+
+import { redisClient } from "../config/redis/redis.js";
+import profileService from "../services/profile.service.js";
 import AppError from "../utils/Apperror.js";
-import uploadOnCloudinary from "../utils/cloudinary.js";
+
 
 
 export const changeCurrentPassword = async (req, res) => {
@@ -8,23 +10,10 @@ export const changeCurrentPassword = async (req, res) => {
         const userId = req.user._id
         const { oldPassword, newPassword } = req.body
 
-        if (!oldPassword || !newPassword) {
-            throw new AppError(" invalid  details", 400)
-        }
+       const result = await profileService.changeCurrentPassword(userId,oldPassword,newPassword)
 
-        const user = await User.findById(userId)
-
-        if (!user) {
-            throw new AppError("invalid user.", 404)
-        }
-
-        const passwordCheck = await user.isPasswordCorrect(oldPassword)
-        if (!passwordCheck) {
-            throw new AppError("enter valid password.", 400)
-        }
-        user.password = newPassword
-        await user.save({ validateBeforeSave: false })
-
+        await redisClient.del(`user:profile:${userId}`);
+        
         return res.status(200).json({
             success: true,
             message: "Password changed successfully",
@@ -38,22 +27,16 @@ export const changeCurrentPassword = async (req, res) => {
 export const updateAccoutDetails = async (req, res) => {
     try {
         const { email, fullName } = req.body
-        if (!email || !fullName) {
-            throw new AppError("details not provide", 400)
-        }
-        const user = await User.findByIdAndUpdate(req.user?._id,
-            {
-                $set: {
-                    fullName,
-                    email
-                }
-            },
-            { new: true }).select("-password")
+        console.log("check the user id and body in udate account details controller =>",req.user._id,req.body)
+
+        const result = await profileService.updateCurrentAccountDetails(req.user._id,email,fullName)
+
+       await redisClient.del(`user:profile:${req.user._id}`);
 
         res.status(200).json({
             success: true,
             message: "user update successfully.",
-            user
+            user : result
         })
     } catch (error) {
         console.log("error in update user details.==>", error)
@@ -63,55 +46,40 @@ export const updateAccoutDetails = async (req, res) => {
 
 export const updateUserAvatar = async (req, res) => {
     try {
-        const userId = req.user._id
+        const userId = req.user?._id
         const avatarImagePath = req.file?.path
-        if (!avatarImagePath) {
-            throw new AppError("provide correct image.", 400)
-        }
+      const result = await profileService.updateCurrentAvatar(userId,avatarImagePath)
 
-        const uploadAvatar = await uploadOnCloudinary(avatarImagePath, "youTube/profile")
-        if (!uploadAvatar) {
-            throw new AppError("avatar is missing ", 400)
-        }
-
-        const user = await User.findByIdAndUpdate(userId, {
-            $set: { avatar: uploadAvatar?.url }
-        }, { new: true }).select("-password")
+      await redisClient.del(`user:profile:${userId}`);
 
         res.status(200).json({
             success: true,
             message: "user update successfully.",
-            user
+            user: result
         })
     } catch (error) {
         console.log("error in update Avatar.==>", error)
+         throw new AppError(error.message, 500)
     }
 }
 
 
 export const updateUserCoverImage = async (req, res) => {
     try {
-        const userId = req.user
+        const userId = req.user?._id
         const coverImagePath = req.file?.path
-        if (!coverImagePath) {
-            throw new AppError("provide correct image.", 400)
-        }
+      
+        const result = await profileService.updateCurrentCoverImage(userId,coverImagePath)
 
-        const uploadCoverImage = await uploadOnCloudinary(coverImagePath, "youTube/profile")
-        if (!uploadCoverImage) {
-            throw new AppError("coverImage is missing ", 400)
-        }
-
-        const user = await User.findByIdAndUpdate(userId, {
-            $set: { coverImage: uploadCoverImage?.url }
-        }, { new: true }).select("-password")
+        await redisClient.del(`user:profile:${userId}`);
 
         res.status(200).json({
             success: true,
             message: "user update successfully.",
-            user
+            user:result
         })
     } catch (error) {
         console.log("error in update Avatar.==>", error)
+         throw new AppError(error.message, 500)
     }
 }

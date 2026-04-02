@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
         required:true,
         unique:true,
         lowercase:true,
-       
+       index:true
 
     },
     fullName:{
@@ -35,7 +35,8 @@ const userSchema = new mongoose.Schema({
     watchHistory:[
         {
             type:mongoose.Schema.Types.ObjectId,
-            ref:"Video"
+            ref:"Video",
+            index: true
         }
     ],
     avatar:{
@@ -50,17 +51,17 @@ const userSchema = new mongoose.Schema({
 },{timestamps:true})
 
 
-// hashing a password
+ userSchema.index({email:1,userName:1})
+
 
 userSchema.pre("save", async function () {
   try {
     if (!this.isModified("password")) {
-      return 
+      return
     }
 
     const hashPassword = await bcrypt.hash(this.password, 10)
     this.password = hashPassword
-   
   } catch (error) {
     console.error("Error in hash password:", error)
     throw error

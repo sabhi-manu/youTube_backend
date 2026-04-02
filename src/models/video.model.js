@@ -2,41 +2,60 @@ import mongoose from "mongoose"
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2"
 
 const videoSchema = new mongoose.Schema({
-    videoFile:{
-        type:String,  // third party
-        required:true
+    videoFile: {
+        type: String,
+        default: "" 
     },
-    thumbnail:{
-        type:String, // third party
-        requried:true
+    thumbnail: {
+        type: String,
+        default: "" 
     },
-    owner:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        index: true
     },
-    title:{
-        type:String,
-        requried:true
+    title: {
+        type: String,
+        required: true,
+        index: true
     },
-    description:{
-        type:String,
-        requried:true
+    description: {
+        type: String,
+        required: true
     },
-    duration:{
-        type:Number , // third party
+    duration: {
+        type: Number
     },
-    views:{
-        type:Number,
-        default:0
+    views: {
+        type: Number,
+        default: 0,
+        index: true
     },
-    isPublished:{
-        type:Boolean,
-        default:true
+    isPublished: {
+        type: Boolean,
+        default: false, 
+        index: true
+    },
+
+   
+    status: {
+        type: String,
+        enum: ["processing", "published", "failed"],
+        default: "processing",
+        index: true
     }
-},{timestamps:true})
 
-videoSchema.plugin(mongooseAggregatePaginate)
+}, { timestamps: true });
 
-const Video = mongoose.model("Video",videoSchema)
 
+videoSchema.plugin(mongooseAggregatePaginate);
+
+
+videoSchema.index({ owner: 1, isPublished: 1 });
+videoSchema.index({ title: "text", description: "text" });
+
+
+
+const Video = mongoose.model("Video", videoSchema)
 export default Video

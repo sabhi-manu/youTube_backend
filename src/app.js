@@ -11,6 +11,7 @@ import likeRoute from "./routes/like.route.js"
 import dashBoardRoute from "./routes/dashboard.route.js"
 import errorHandler from "./middlewares/errorHandler.js"
 import cors from "cors";
+import compression from "compression"
 
 const app = express()
 
@@ -18,10 +19,17 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
+app.use(compression({
+    level: 6, // 0–9 (balance speed vs compression)
+    threshold: 1024 // only compress >1KB
+}));
 
 app.use(
   cors({
-    origin: "https://you-tube-client-orpin.vercel.app", 
+   origin: [
+  "https://you-tube-client-orpin.vercel.app",
+  "http://localhost:5173"
+],
     credentials: true,              
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
