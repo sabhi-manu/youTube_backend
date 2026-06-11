@@ -13,7 +13,8 @@ export const userRegisterController = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: true,
-        sameSite: "none"
+        sameSite: "none",
+        maxAge: 24 * 60 * 60 * 1000
     };
 
     res.cookie("accessToken", result.accessToken, options);
@@ -35,6 +36,7 @@ export const userLoginController = asyncHandler(async (req, res) => {
         httpOnly: true,
         secure: true,
           sameSite: "none", 
+         maxAge: 24 * 60 * 60 * 1000
     }
 
     res.cookie("accessToken", result.accessToken, option)
@@ -78,7 +80,8 @@ export const refreshTOkenController = asyncHandler(async (req, res) => {
     const option = {
          httpOnly: true,
         secure: true,
-        sameSite: "none"
+        sameSite: "none",
+         maxAge: 24 * 60 * 60 * 1000
     }
     res.cookie("accessToken", result.accessToken, option)
     res.cookie("refreshToken", result.refreshToken, option)
